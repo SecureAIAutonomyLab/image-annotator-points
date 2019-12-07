@@ -1,0 +1,124 @@
+package main;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
+import javafx.application.Application;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Stage;
+
+public class MRIScanGUI extends Application {
+	static double initx, inity;
+	static int height;
+	static int width;
+	public static String path;
+	static Scene initialScene, View;
+	static double offSetX, offSetY, zoomlvl;
+
+	/*
+	 * New Codes
+	 */
+	static double getX, getY, getScreenX, getScreenY;
+
+	public static void main(String[] args) {
+		launch(args);
+	}
+
+	@Override
+	public void start(Stage s) {
+		s.setResizable(true);
+		s.setTitle("MRI Scan Image");
+		GridPane grid = new GridPane();
+		grid.setHgap(5);
+		grid.setVgap(5);
+		grid.setAlignment(Pos.CENTER);
+
+		Label hint = new Label("Select Your Image: ");
+		TextField URL = new TextField();
+		URL.setEditable(false);
+		URL.setPrefWidth(350);
+
+		Button browse = new Button("Browse");
+		FileChooser fc = new FileChooser();
+
+		ExtensionFilter png = new ExtensionFilter("png", "*.png");
+		ExtensionFilter jpg = new ExtensionFilter("jpg", "*.jpg");
+		ExtensionFilter tiff = new ExtensionFilter("TIFF", "*.tif", "*.tiff");
+		fc.getExtensionFilters().addAll(png, jpg, tiff);
+		browse.setOnAction(e -> {
+			URL.setText(fc.showOpenDialog(s).getAbsolutePath());
+		});
+
+		Button open = new Button("Open");
+		open.setOnAction(e -> {
+			path = URL.getText();
+			initView();
+			s.setScene(View);
+		});
+		// Select Your Image Text
+		grid.add(hint, 0, 0);
+		// URL Textbox URL
+		grid.add(URL, 1, 0);
+		// Browse Button
+		grid.add(browse, 2, 0);
+		// Open Button
+		grid.add(open, 2, 1);
+
+		initialScene = new Scene(grid, 600, 100);
+		s.setScene(initialScene);
+		s.show();
+	}
+
+	public static void initView() {
+		VBox root = new VBox(20);
+		root.setAlignment(Pos.CENTER);
+
+		Label title = new Label(path.substring(path.lastIndexOf("\\") + 1));
+		Image image = null;
+		try {
+			image = new Image(new FileInputStream(path));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		ImageView imageView = new ImageView(image);
+
+		/**
+		 * Aspect Ratio: Resize something (like an image), but wish to preserve the way it looks.
+		 */
+		System.out.println("Image Get Width: "+ image.getWidth() + " Get Height: "+image.getHeight());
+		double ratio = image.getWidth()/image.getHeight();
+		if(500/ratio < 500){
+			width = 500;
+			height=(int)(500/ratio);
+		}else if(500*ratio < 500){
+			height = 500;
+			width = (int)(500*ratio);
+		}else{
+			height=500;
+			width=500;
+		}
+		System.out.println("Aspect Ratio: Width: "+ width+" Height: "+height);
+		/**
+		 * setPreserveRatio: Allows resizing the displayed image (with or without preserving the original aspect ratio) and specifying a viewport
+		 * into the source image for restricting the pixels displayed by this ImageView.
+		 */
+		imageView.setPreserveRatio(true);
+		imageView.setFitWidth(width);
+		imageView.setFitHeight(height);
+		View = new Scene(root,(imageView.getFitWidth())+20,(imageView.getFitHeight())+20);
+//		View = new Scene(root,(imageView.getFitWidth()),(imageView.getFitHeight()));
+
+	}
+
+}

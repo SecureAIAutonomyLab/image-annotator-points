@@ -1,0 +1,5 @@
+INDEX VERSION 1.129+C:\Users\vohon\OneDrive\Documents\javafx_mri\.metadata\.plugins\org.eclipse.jdt.core
+3445323389.index
+3861923200.index
+225456407.index
+842643614.index

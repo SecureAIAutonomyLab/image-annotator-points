@@ -1,0 +1,82 @@
+package application;
+
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.scene.shape.Circle;
+
+public class Main extends Application {
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+//        primaryStage.setTitle("My First JavaFX App");
+//        Label label = new Label("Hello World, JavaFX !");
+//        Scene scene = new Scene(label, 400, 200);
+//        primaryStage.setScene(scene);
+//        primaryStage.show();
+        primaryStage.setTitle("JavaFX App");
+
+        Stage stage = new Stage();
+        //stage.initModality(Modality.APPLICATION_MODAL);
+        //stage.initModality(Modality.WINDOW_MODAL);
+        //stage.initModality(Modality.NONE);
+
+        primaryStage.show();
+        stage.showAndWait();
+//        stage.showAndWait();
+    	/**
+    	VBox vBox = new VBox(new Label("JavaFX Label"));
+    	Scene scene = new Scene(vBox);
+    	Stage stage = new Stage();
+    	stage.setX(200);
+    	stage.setY(200);
+    	stage.setWidth(800);
+    	stage.setHeight(800);
+    	stage.setScene(scene);
+    	stage.setTitle("Testing");
+    	stage.show();
+    	**/
+    }
+
+    public static void main(String[] args){
+    	Application.launch(args);
+    }
+	/**
+
+    public Pane pane = new Pane();
+
+    @Override
+    public void start(Stage primaryStage) {
+
+        Scene scene = new Scene(pane, 350, 200);
+
+        primaryStage.setTitle("Test");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
+        scene.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY) {
+                Circle circle = new Circle(4);
+
+                circle.setTranslateX(e.getX());
+                circle.setTranslateY(e.getY());
+                pane.getChildren().addAll(circle);
+            } else if (e.getButton() == MouseButton.SECONDARY) {
+
+                System.out.println("Right-Click");
+            }
+
+        });
+
+    }
+    **/
+/**
+    public static void main(String[] args) {
+        launch(args);
+    }
+**/
+}

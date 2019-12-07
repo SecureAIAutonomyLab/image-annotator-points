@@ -1,0 +1,421 @@
+package app;
+/**
+ * JavaFX Tutorial: http://tutorials.jenkov.com/javafx/stage.html
+ * Draw Points: https://stackoverflow.com/questions/29739203/mouseevent-add-circles-to-scene
+ * Source Code: https://stackoverflow.com/questions/48687994/zooming-an-image-in-imageview-javafx
+ */
+
+import java.awt.Checkbox;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.scene.Cursor;
+import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
+
+/**
+ *
+ * @author Thinh Vo.
+ *
+ * Descriptions:
+ *
+ *
+ *
+ *
+ * Notes:
+ * FlowPane: lays out its children in a flow that wraps at the flowpane's boundary.
+ * HBox: arranges its content nodes horizontally in a single row.
+ * VBox: arranges its content nodes vertically in a single column
+ * Anchor
+ */
+public class MRIScanImage extends Application {
+	/**
+	 * Variables
+	 */
+    static double initx;
+    static double inity;
+    static int height;
+    static int width;
+    public static String path;
+    static Scene initialScene,View;
+    static double offSetX,offSetY,zoomlvl;
+
+    //New Codes
+    static double getX, getY,getScreenX, getScreenY;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage s) {
+        s.setResizable(false);
+        s.setTitle("MRI Scan Image");
+        //New Codes
+        s.setWidth(600);
+        s.setHeight(600);
+        //------------
+        //GridPane – places its content nodes in a grid of rows and columns.
+        GridPane grid = new GridPane();
+        grid.setHgap(5);//10
+        grid.setVgap(5);
+        grid.setAlignment(Pos.CENTER);
+
+        Label hint = new Label("Select Your Image: ");
+        TextField URL = new TextField();
+        URL.setEditable(false);
+        URL.setPrefWidth(350);
+
+        Button browse = new Button("Browse");
+        FileChooser fc = new FileChooser();
+        //ExtensionFilter extFilterAll = new ExtensionFilter("All Files", "*.jpeg", "*.jpg","jpg","*.pdf",
+        //        "*.tiff", "*.tif","*.JPG","*.JPEG", "*.PDF", "*.TIFF", "*.TIF","png",".png");
+        ExtensionFilter png = new ExtensionFilter("png", "*.png");
+        ExtensionFilter jpg = new ExtensionFilter("jpg", "*.jpg");
+        ExtensionFilter tiff = new ExtensionFilter("TIFF", "*.tif", "*.tiff");
+        fc.getExtensionFilters().addAll(png,jpg,tiff);
+        //fc.getExtensionFilters().add(extFilterAll);
+        browse.setOnAction(e->{
+            URL.setText(fc.showOpenDialog(s).getAbsolutePath());
+        });
+
+        Button open = new Button("Open");
+        open.setOnAction(e->{
+            path = URL.getText();
+            try {
+				initView();
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+            s.setScene(View);
+        });
+        //Select Your Image Text
+        grid.add(hint, 0, 0);
+        //URL Textbox URL
+        grid.add(URL, 1, 0);
+        //Browse Button
+        grid.add(browse, 2, 0);
+        //Open Button
+        grid.add(open, 2, 1);
+        initialScene = new Scene(grid,600,100);
+        s.setScene(initialScene);
+        s.show();
+    }
+
+    public static void initView() throws FileNotFoundException{
+    	//VBox – arranges its content nodes vertically in a single column.
+        VBox root = new VBox(20);
+        root.setAlignment(Pos.CENTER);
+        Label title = new Label(path.substring(path.lastIndexOf("\\")+1));
+        //Getting image from file
+        Image image = null;
+        try {
+        	//FileInputStream input = new FileInputStream(path); It is created which points to the image file of the image to display
+        	//Image image = new Image(input); Second an Image instance is created, passing the FileInputStream as parameter to the Image constructor. This way the Image class knows where to load the image file from.
+            image = new Image(new FileInputStream(path));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        //Create ImageView to display Image.
+        ImageView imageView = new ImageView(image);
+
+        //Aspect Ratio: Resize something (like an image), but wish to preserve the way it looks.
+        double ratio = image.getWidth()/image.getHeight();
+        System.out.println("Aspect Ratio Fraction: "+ ratio);
+        if(500/ratio < 500) {// 500/1.131188118811881 = 442.01
+            width=500;
+            height=(int) (500/ratio);
+        }else if(500*ratio < 500){
+            height=500;
+            width=(int) (500*ratio);
+        }else {
+            height=500;
+            width=500;
+        }
+
+        System.out.println("Aspect Ratio: Width: "+ width +" Height: "+height);
+//        imageView.setPreserveRatio(false);
+        imageView.setPreserveRatio(true);
+        //image.setPreserveRatio(true);
+        imageView.setFitWidth(width);
+        imageView.setFitHeight(height);
+        height = (int) image.getHeight();
+        width = (int) image.getWidth();
+        System.out.println("height = "+height+"\nwidth = "+width);
+        //HBox zoom = new HBox(10);
+        // HBox – arranges its content nodes horizontally in a single row.
+        HBox zoom = new HBox(30);
+        zoom.setAlignment(Pos.CENTER);
+
+        //New Codes
+        CheckBox pointFunctionCheckBox = new CheckBox("Points");
+        Button activatePointsButton = new Button("Activate!");
+        //HBox pointFunctionCheckBoxHBox = new HBox(pointFunctionCheckBox);
+        activatePointsButton.setOnAction(e -> handleOptions(pointFunctionCheckBox));
+
+        //Zoom Level bar
+        Slider zoomLvl = new Slider();
+        //zoomLvl.setMax(4);
+        zoomLvl.setMax(10);
+        zoomLvl.setMin(1);
+        zoomLvl.setMaxWidth(200);
+        zoomLvl.setMinWidth(200);
+        Label hint = new Label("Zoom Level");
+        Label value = new Label("1.0");
+        offSetX = width/2; //Set width at the middle/center of the screen.
+        offSetY = height/2; //Set height at the middle/center of the screen.
+        System.out.println("Offset x: "+ offSetX + " Offset y: "+ offSetY);
+
+        //zoom.getChildren().addAll(hint,zoomLvl,value); Origional Codes
+        zoom.getChildren().addAll(hint,zoomLvl,value,pointFunctionCheckBox,activatePointsButton);
+
+        //Horizontal Bar Moving
+        Slider Hscroll = new Slider();
+        Hscroll.setMin(0);
+        Hscroll.setMax(width);
+        Hscroll.setMaxWidth(imageView.getFitWidth());
+        Hscroll.setMinWidth(imageView.getFitWidth());
+        Hscroll.setTranslateY(-20);
+
+        //Vertical Bar Moving
+        Slider Vscroll = new Slider();
+        Vscroll.setMin(0);
+        Vscroll.setMax(height);
+        Vscroll.setMaxHeight(imageView.getFitHeight());
+        Vscroll.setMinHeight(imageView.getFitHeight());
+        Vscroll.setOrientation(Orientation.VERTICAL);
+        Vscroll.setTranslateX(-20);
+
+        //BorderPane – lays out its content nodes in the top, bottom, right, left, or center region.
+        BorderPane imageViewBorderPane = new BorderPane();
+        BorderPane.setAlignment(Hscroll, Pos.CENTER); //Location of Horizontal Bar
+        BorderPane.setAlignment(Vscroll, Pos.CENTER_LEFT); //Location of Vertical Bar
+
+        /**
+         * New Codes
+         */
+        //AnchorPane anchorRoot = new AnchorPane();
+        final double maxX = imageView.getImage().getWidth();
+        final double maxY = imageView.getImage().getHeight();
+        //Scene View = new Scene(root,(imageView.getFitWidth())+70,(imageView.getFitHeight())+150);
+        //imageViewBorderPane.getChildren().add(imageView);
+        //---------------------r
+
+      //New Codes
+//        EventHandler<ActionEvent> pointFunctionEvent = new EventHandler<ActionEvent>(){
+//        	public void handle(ActionEvent e)
+//        	{
+//        		if(pointFunctionCheckBox.isSelected())
+//        			System.out.println("Checkbox is selected");
+//        			image.setOnMouseClicked(e1 ->{
+//        				if(e1.getButton() == MouseButton.PRIMARY){
+//        					Circle circle = new Circle(4);
+//        					circle.setTranslateX(e1.getX());
+//        					circle.setTranslateY(e1.getY());
+//        					imageView.getChildren().addAll(circle);
+//        				}else if(e1.getButton() == MouseButton.SECONDARY){
+//        					System.out.println("Right-Click");
+//        				}
+//        			});
+//        		//else
+//        			//System.out.println("Checkbox is not selected");
+//        	}
+//        };
+
+        Hscroll.valueProperty().addListener(e->{
+            offSetX = Hscroll.getValue();
+            zoomlvl = zoomLvl.getValue();
+            System.out.println("254--- OffsetX: "+offSetX +" ZoomLvl: "+ zoomLvl);
+            double newValue = (double)((int)(zoomlvl*10))/10;
+            System.out.println("256--- newValue: "+newValue);
+            value.setText(newValue+"");
+            double newRescalableWidth = (width/newValue)/2;
+            System.out.println("259 ---- New RescalableWidth: "+ newRescalableWidth);
+            System.out.println("260 --- Width: "+width);
+            /**
+            if(offSetX<(width/newValue)/2) {
+                offSetX = (width/newValue)/2;
+            }
+            if(offSetX>width-((width/newValue)/2)) {
+                offSetX = width-((width/newValue)/2);
+            }
+            *
+            */
+            if(offSetX< newRescalableWidth) {
+                offSetX = (width/newValue)/2;
+            }
+            if(offSetX>width-(newRescalableWidth)) {
+                offSetX = width-((width/newValue)/2);
+            }
+            Rectangle2D viewportRectHscroll = new Rectangle2D(offSetX-((width/newValue)/2), offSetY-((height/newValue)/2), width/newValue, height/newValue);
+            imageView.setViewport(viewportRectHscroll);
+        });
+        Vscroll.valueProperty().addListener(e->{
+            offSetY = height-Vscroll.getValue();
+            zoomlvl = zoomLvl.getValue();
+            double newValue = (double)((int)(zoomlvl*10))/10;
+            value.setText(newValue+"");
+            if(offSetY<(height/newValue)/2) {
+                offSetY = (height/newValue)/2;
+            }
+            if(offSetY>height-((height/newValue)/2)) {
+                offSetY = height-((height/newValue)/2);
+            }
+            /**
+             * New Codes
+             */
+            Rectangle2D viewportRectVscroll = new Rectangle2D(offSetX-((width/newValue)/2), offSetY-((height/newValue)/2), width/newValue, height/newValue);
+            //-------------
+            imageView.setViewport(viewportRectVscroll);
+        });
+
+        Image imgWoodland = new Image(new FileInputStream("C:\\images\\woodland.png"));
+		//Create an image view that uses the image.
+		ImageView ivWoodland = new ImageView(imgWoodland);
+
+        imageViewBorderPane.setCenter(imageView);
+//        imageViewBorderPane.setLeft(imageView); //Test Code
+        imageViewBorderPane.setTop(Hscroll);
+        imageViewBorderPane.setRight(Vscroll);
+        zoomLvl.valueProperty().addListener(e->{
+            zoomlvl = zoomLvl.getValue();
+            double newValue = (double)((int)(zoomlvl*10))/10;
+            value.setText(newValue+"");
+            if(offSetX<(width/newValue)/2) {
+                offSetX = (width/newValue)/2;
+            }
+            if(offSetX>width-((width/newValue)/2)) {
+                offSetX = width-((width/newValue)/2);
+            }
+            if(offSetY<(height/newValue)/2) {
+                offSetY = (height/newValue)/2;
+            }
+            if(offSetY>height-((height/newValue)/2)) {
+                offSetY = height-((height/newValue)/2);
+            }
+            Hscroll.setValue(offSetX);
+            Vscroll.setValue(height-offSetY);
+            Rectangle2D viewportZoomLevel = new Rectangle2D(offSetX-((width/newValue)/2), offSetY-((height/newValue)/2), width/newValue, height/newValue);
+            imageView.setViewport(viewportZoomLevel);
+            System.out.println("Viewport Zoom Level: "+viewportZoomLevel);
+
+        });
+        //imageView.setCursor(Cursor.OPEN_HAND);
+        //imageViewBorderPane.setCursor(Cursor.DEFAULT); //Original Code
+        imageView.setOnMousePressed(e->{
+            initx = e.getSceneX();
+            inity = e.getSceneY();
+            e.consume(); // New code
+            getX = e.getX();
+            getY = e.getY();
+            getScreenX = e.getScreenX();
+            getScreenY = e.getScreenY();
+            //imageView.setCursor(Cursor.CLOSED_HAND);
+            //imageView.contains(getX, getY);
+            //imageView.setCursor(Cursor.DEFAULT);
+            //imageViewBorderPane.setCursor(Cursor.DEFAULT); // Original Code
+            //System.out.println("intX: "+initx +"initY: "+inity);
+            System.out.println("**Get X: "+ getX + " get Y: "+getY);
+            //Point2D point2d_1 = new Point2D(getX,getY);
+            //imageView.contains(point2d_1);
+            //System.out.println("***Get Screen X: "+getScreenX +" Get Screen Y: "+ getScreenY);
+            if(e.getButton() == MouseButton.PRIMARY){
+            	System.out.println("Left Click");
+            	Circle circle = new Circle(4);
+            	//circle.setTranslateX(e.getX());
+            	//circle.setTranslateY(e.getY());
+            	circle.setFill(Color.BLUE);
+            	circle.setTranslateX(e.getX());
+            	circle.setTranslateY(e.getY());
+            	//circle.setCenterX(e.getX());
+            	//circle.setCenterY(e.getY());
+            	imageViewBorderPane.getChildren().addAll(circle);
+            	//imageView.get
+            	//root.getChildren().addAll(circle);
+            }
+            //Circle circle = new Circle(4);
+			//circle.setTranslateX(getX);
+			//circle.setTranslateY(getY);
+			//circle.set
+			//imageView.getChildren().addAll(circle);
+            //System.out.println("****Get Screen X: "+ getScreenX + " getScreenY: "+getScreenY);
+        });
+        imageView.setOnMouseReleased(e->{
+            //imageView.setCursor(Cursor.OPEN_HAND);
+        	imageViewBorderPane.setCursor(Cursor.DEFAULT);
+        });
+        //imageView.
+        imageView.setOnMouseDragged(e->{
+            Hscroll.setValue(Hscroll.getValue()+(initx - e.getSceneX()));
+            Vscroll.setValue(Vscroll.getValue()-(inity - e.getSceneY()));
+            initx = e.getSceneX();
+            inity = e.getSceneY();
+            System.out.println("Drag initx: "+initx+" Drag inity: "+ inity);
+
+            /**
+             * New Code
+             */
+            if(e.getSceneX() < maxX && e.getSceneY() < maxY){
+            	Line line = new Line(initx, inity,e.getSceneX(),e.getSceneY());
+            	line.setFill(null);
+            	line.setStroke(Color.RED);
+            	line.setStrokeWidth(2);
+            	imageViewBorderPane.getChildren().add(line);
+
+            }
+            initx = e.getSceneX() > maxX ? maxY : e.getSceneX();
+            inity = e.getSceneY() > maxY ? maxY : e.getSceneY();
+        });
+        root.getChildren().addAll(title,imageViewBorderPane,zoom);
+
+        //Second Scene
+        //View = new Scene(root,(imageView.getFitWidth())+70,(imageView.getFitHeight())+150);
+        View = new Scene(root,(imageView.getFitWidth())+200,(imageView.getFitHeight())+200);
+    }
+
+    static void drawPoints(double mouseX, double mouseY){
+    	System.out.println("In draw");
+    	Circle circle = new Circle(105,Color.RED);
+    }
+
+    //Handle Checkbox options
+    private static void handleOptions(CheckBox pointFunctionCheckBox){
+    	String message = "Activate Draw Points:\n";
+    	if(pointFunctionCheckBox.isSelected())
+    		message += "Activate";
+    	else
+    		message += "Inactivate";
+    	System.out.println(message);
+    }
+}
+
